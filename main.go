@@ -1,7 +1,7 @@
 package main
 
 import (
-	"dev/deltastreamer/cmd"
+	"github.com/markcampv/deltastreamer/cmd"
 	"log"
 )
 
