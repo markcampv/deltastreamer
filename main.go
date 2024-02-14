@@ -1,25 +1,14 @@
 package main
 
 import (
-	"fmt"
+	"dev/deltastreamer/cmd"
 	"log"
-	// Assume "consul/api" is the Consul API client library
-	"github.com/hashicorp/consul/api"
 )
 
 func main() {
-	// Initialize Consul client
-	consulConfig := api.DefaultConfig()
-	consulClient, err := api.NewClient(consulConfig)
-	if err != nil {
-		log.Fatalf("Error creating Consul client: %v", err)
+	// Execute the root command defined in the cmd package
+	if err := cmd.Execute(); err != nil {
+		log.Fatalf("Error executing DeltaStreamer: %v", err)
 	}
 
-	//  print services
-	services, _, err := consulClient.Catalog().Services(nil)
-	if err != nil {
-		log.Fatalf("error querying Consul services: %v", err)
-	}
-
-	fmt.Println("Services", services)
 }
