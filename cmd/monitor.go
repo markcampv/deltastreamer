@@ -49,7 +49,38 @@ func monitorServices(cmd *cobra.Command, args []string) {
 			log.Printf("error fetching services: %v\n", err)
 			continue
 		}
-		logDetlas(previousservices, currentServices)
+		logDeltas(previousServices, currentServices)
 		previousServices = currentServices // Update previous state for next comparison
+	}
+}
+
+func fetchServices(client *api.Client) (map[string]struct{}, error) {
+	catalog := client.Catalog()
+	services, _, err := catalog.Services(nil)
+	if err != nil {
+		return nil, err
+	}
+
+	serviceMap := make(map[string]struct{})
+	for serviceName := range services {
+		serviceMap[serviceName] = struct{}{}
+	}
+
+	return serviceMap, nil
+}
+
+func logDeltas(prev, current map[string]struct{}) {
+	// Log added services
+	for service := range current {
+		if _, exists := prev[service]; !exists {
+			fmt.Printf("Service added: %s\n", service)
+		}
+	}
+
+	// Log removed services
+	for service := range prev {
+		if _, exists := current[service]; !exists {
+			fmt.Printf("Service removed: %s\n", service)
+		}
 	}
 }
