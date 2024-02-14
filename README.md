@@ -22,4 +22,4 @@ DeltaStreamer is a tool designed to efficiently monitor and stream deltas (chang
 
 1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/deltastreamer.git
+   git clone https://github.com/markcampv/deltastreamer.git
