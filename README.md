@@ -43,6 +43,10 @@ To start monitoring your Consul services, use the following command:
 - **--poll-interval: --consul-addr: Specifies the address of the Consul server.**
 - **--start-index: Sets the initial index from which to begin monitoring for changes.**
 
- 
+### Example Output
+
+When you run the deltastreamer command, you will see an output similar to this:
+
+![DeltaStreamer Output](assets/images/deltastreamer.png)
 
 
