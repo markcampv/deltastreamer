@@ -43,11 +43,11 @@ or service instances
 ```shell
 ./deltastreamer monitor --consul-addr="http://localhost:8500" --poll-interval=10 --start-index=0
 ```
-- **--consul-addr: Specifies the address of the Consul server.**
-- **--poll-interval: --consul-addr: Specifies the address of the Consul server.**
-- **--start-index: Sets the initial index from which to begin monitoring for changes.**
-- **--mode: Specifies the monitoring mode. Use "service" for service registration/deregistration monitoring, and "instance" for monitoring specific service instances and their health.**
-- **--service-name: Specifies the name of the service to monitor instances for. Required when --mode is set to "instance".**
+- **--consul-addr**: Specifies the address of the Consul server.
+- **--poll-interval**: --consul-addr: Specifies the address of the Consul server.
+- **--start-index**: Sets the initial index from which to begin monitoring for changes.
+- **--mode**: Specifies the monitoring mode. Use "service" for service registration/deregistration monitoring, and "instance" for monitoring specific service instances and their health.
+- **--service-name**: Specifies the name of the service to monitor instances for. Required when --mode is set to "instance".
 
 ### Example Output
 
