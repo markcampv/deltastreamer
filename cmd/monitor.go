@@ -52,7 +52,7 @@ func monitorCommandHandler(cmd *cobra.Command, args []string) {
 	}
 }
 
-func monitorServicesRegistrations(cmd *cobra.Command, args []string) {
+func monitorServicesRegistrations(client *api.Client) {
 	client, err := api.NewClient((&api.Config{Address: consulAddr}))
 	if err != nil {
 		log.Fatalf("Failed to create Consul client: &v", err)
@@ -100,7 +100,7 @@ func fetchServices(client *api.Client, lastIndex uint64) (map[string]struct{}, u
 	return serviceMap, meta.LastIndex, nil
 }
 
-func monitorServiceInstances (cmd *cobra.Command, args []string) {
+func monitorServiceInstances (client *api.Client) {
 	client, err := api.NewClient((&api.Config{Address: consulAddr}))
 	if err != nil {
 		log.Fatalf("Failed to create Consul client: %v", err)
