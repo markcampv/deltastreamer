@@ -9,7 +9,6 @@ DeltaStreamer is a tool designed to efficiently monitor and stream deltas (chang
 - **Efficient Change Detection**: Tracks and streams only the deltas in service states, including registrations, deregistrations, and health status updates.
 - **Customizable Polling Intervals**: Offers configurable polling intervals to balance between real-time updates and system resource utilization.
 - **Consul Blocking Queries**: Utilizes Consul's blocking query mechanism to efficiently detect changes in the service catalog.
-- **Scalable Architecture**: Designed to efficiently handle large numbers of services and high rates of change.
 - **Simple Integration**: Easy to integrate with existing Consul setups, requiring minimal configuration.
 - **Configurable Start Index**: Allows operators to specify the starting index for monitoring, providing control over the initial state of watch.
 
@@ -41,8 +40,15 @@ or service instances
 #### For Service Registrations
 
 ```shell
-./deltastreamer monitor --consul-addr="http://localhost:8500" --poll-interval=10 --start-index=0
+./deltastreamer monitor --mode="service" --consul-addr="http://localhost:8500" --poll-interval=10 --start-index=0
 ```
+
+#### For Service Instances
+
+```shell
+./deltastreamer monitor --mode="instance" --consul-addr="http://localhost:8500" --service-name="service-name" --poll-interval=10 --start-index=0
+```
+
 - **--consul-addr**: Specifies the address of the Consul server.
 - **--poll-interval**: --consul-addr: Specifies the address of the Consul server.
 - **--start-index**: Sets the initial index from which to begin monitoring for changes. If not explicitly set, it defaults to 0.
