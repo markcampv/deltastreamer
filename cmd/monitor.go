@@ -57,6 +57,7 @@ func monitorServices(cmd *cobra.Command, args []string) {
 			previousServices = currentServices // Update previous state for next comparison
 		}
 		lastIndex = newIndex
+		fmt.Printf("Last index update to: %d\n", lastIndex)
 	}
 }
 
