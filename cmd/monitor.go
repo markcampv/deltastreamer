@@ -131,11 +131,16 @@ func monitorServiceInstances(client *api.Client) {
 		totalInstances := len(instances)
 		healthyInstances := 0
 		for _, instance := range instances {
+			isHealthy := false
 			for _, check := range instance.Checks {
-				if check.Status == "passing" {
-					healthyInstances++
+				fmt.Printf("CheckID: %s, Status: %s\n", check.CheckID, check.Status) // Debugging line
+				if check.Status == "passing" && check.ServiceID == serviceName {
+					isHealthy = true
 					break // This accounts for on health check per instance for now
 				}
+			}
+			if isHealthy {
+				healthyInstances++
 			}
 		}
 
@@ -152,7 +157,8 @@ func fetchServiceInstances(client *api.Client, serviceName string, lastIndex uin
 		WaitTime:  5 * time.Minute, // Max wait time; may make a flag out of this
 	}
 
-	instances, meta, err := client.Health().Service(serviceName, "", true, queryOpts)
+	// Fetch all instances, regardless of their health status
+	instances, meta, err := client.Health().Service(serviceName, "", false, queryOpts)
 	if err != nil {
 		return nil, 0, err
 	}
