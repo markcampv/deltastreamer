@@ -37,7 +37,7 @@ func init() {
 }
 
 func monitorCommandHandler(cmd *cobra.Command, args []string) {
-	client, err := api.NewClient((&api.Config{Address: consulAddr})
+	client, err := api.NewClient((&api.Config{Address: consulAddr}))
 	if err != nil {
 		log.Fatalf("Failed to create Consul client: %v", err)
 	}
@@ -100,19 +100,17 @@ func fetchServices(client *api.Client, lastIndex uint64) (map[string]struct{}, u
 	return serviceMap, meta.LastIndex, nil
 }
 
-func monitorServiceInstances (client *api.Client) {
+func monitorServiceInstances(client *api.Client) {
 	client, err := api.NewClient((&api.Config{Address: consulAddr}))
 	if err != nil {
 		log.Fatalf("Failed to create Consul client: %v", err)
 	}
 
-	
 	lastIndex := startIndex // Use the startIndex specified by the flag
 	var previousInstances []*api.ServiceEntry
 
-
 	fmt.Println("Monitoring instances of service:", serviceName, "at", consulAddr)
-	ticker :=  time.NewTicker(time.Duration(pollInterval) * time.Second)
+	ticker := time.NewTicker(time.Duration(pollInterval) * time.Second)
 	defer ticker.Stop()
 
 	for range ticker.C {
@@ -124,9 +122,9 @@ func monitorServiceInstances (client *api.Client) {
 		}
 
 		if newIndex != lastIndex {
-			logInstanceDeltas(previousInstances, instances) // Use 'instances' directly as fetched
+			logInstanceDeltas(previousInstances, instances)               // Use 'instances' directly as fetched
 			previousInstances = make([]*api.ServiceEntry, len(instances)) //Reinitialize previousInstances to match instances length
-			copy(previousInstances, instances) //Deep copy instances to previousInstances
+			copy(previousInstances, instances)                            //Deep copy instances to previousInstances
 		}
 
 		// count health instances
@@ -189,15 +187,15 @@ func logInstanceDeltas(prev, curr []*api.ServiceEntry) {
 
 	// Populate the current instances map and check for additions or health changes
 	for _, instance := range curr {
-	     currMap[instance.Service.ID] = instance
-	     if _, exists := prevMap[instance.Service.ID]; !exists {
-			 fmt.Printf("Added instance %s\n", instance.Service.ID)
-		 } else {
-			 //Check if health status has changed
-			 if !healthStatusEquals(prevMap[instance.Service.ID], instance) {
-				 fmt.Printf(("Health status changed for instance: %s\n", instance.Service.ID)
-			 }
-		 }
+		currMap[instance.Service.ID] = instance
+		if _, exists := prevMap[instance.Service.ID]; !exists {
+			fmt.Printf("Added instance %s\n", instance.Service.ID)
+		} else {
+			//Check if health status has changed
+			if !healthStatusEquals(prevMap[instance.Service.ID], instance) {
+				fmt.Printf("Health status changed for instance: %s\n", instance.Service.ID)
+			}
+		}
 	}
 
 	// Check for removed instances
@@ -208,6 +206,16 @@ func logInstanceDeltas(prev, curr []*api.ServiceEntry) {
 	}
 }
 
-
-
-
+func healthStatusEquals(a, b *api.ServiceEntry) bool {
+	// Simplified health status comparison
+	// Note: This assumes a single health check per instance for simplicity.
+	if len(a.Checks) != len(b.Checks) {
+		return false
+	}
+	for i := range a.Checks {
+		if a.Checks[i].Status != b.Checks[i].Status {
+			return false
+		}
+	}
+	return true
+}
