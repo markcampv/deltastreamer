@@ -20,14 +20,16 @@ var monitorCmd = &cobra.Command{
 var (
 	consulAddr   string
 	pollInterval int
+	startIndex   uint64
 )
 
 func init() {
 	rootCmd.AddCommand(monitorCmd)
 
 	//Define your flags and configuration settings.
-	monitorCmd.Flags().StringVarP(&consulAddr, "consul-addr", "addr", "http://localhost:8500", "Address of the Consul server")
+	monitorCmd.Flags().StringVarP(&consulAddr, "consul-addr", "a", "http://localhost:8500", "Address of the Consul server")
 	monitorCmd.Flags().IntVarP(&pollInterval, "poll-interval", "p", 10, "Polling interval in seconds")
+	monitorCmd.Flags().Uint64Var(&startIndex, "start-index", 0, "Initial index to start watching for changes")
 }
 
 func monitorServices(cmd *cobra.Command, args []string) {
@@ -37,6 +39,7 @@ func monitorServices(cmd *cobra.Command, args []string) {
 	}
 
 	previousServices := make(map[string]struct{}) // track known services
+	lastIndex := startIndex                       //Use the startIndex specified by the flag
 
 	fmt.Println("Monitoring services at:", consulAddr)
 	ticker := time.NewTicker(time.Duration(pollInterval) * time.Second)
@@ -44,21 +47,28 @@ func monitorServices(cmd *cobra.Command, args []string) {
 
 	for range ticker.C {
 		fmt.Println("Fetching current state of services..")
-		currentServices, err := fetchServices(client)
+		currentServices, newIndex, err := fetchServices(client, lastIndex)
 		if err != nil {
 			log.Printf("error fetching services: %v\n", err)
 			continue
 		}
-		logDeltas(previousServices, currentServices)
-		previousServices = currentServices // Update previous state for next comparison
+		if newIndex != lastIndex {
+			logDeltas(previousServices, currentServices)
+			previousServices = currentServices // Update previous state for next comparison
+		}
+		lastIndex = newIndex
 	}
 }
 
-func fetchServices(client *api.Client) (map[string]struct{}, error) {
-	catalog := client.Catalog()
-	services, _, err := catalog.Services(nil)
+func fetchServices(client *api.Client, lastIndex uint64) (map[string]struct{}, uint64, error) {
+	queryOpts := &api.QueryOptions{
+		WaitIndex: lastIndex,       // Use the last known index to wait for changes
+		WaitTime:  5 * time.Minute, // Max wait time; may make a flag out of this
+	}
+
+	services, meta, err := client.Catalog().Services(queryOpts)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	serviceMap := make(map[string]struct{})
@@ -66,7 +76,7 @@ func fetchServices(client *api.Client) (map[string]struct{}, error) {
 		serviceMap[serviceName] = struct{}{}
 	}
 
-	return serviceMap, nil
+	return serviceMap, meta.LastIndex, nil
 }
 
 func logDeltas(prev, current map[string]struct{}) {
