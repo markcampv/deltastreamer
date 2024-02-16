@@ -43,7 +43,7 @@ or service instances
 ./deltastreamer monitor --mode="service" --consul-addr="http://localhost:8500" --poll-interval=10 --start-index=0
 ```
 
-#### For Service Instances
+#### For Service Instances(--service-name required)
 
 ```shell
 ./deltastreamer monitor --mode="instance" --consul-addr="http://localhost:8500" --service-name="service-name" --poll-interval=10 --start-index=0
