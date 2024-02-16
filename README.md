@@ -45,7 +45,7 @@ or service instances
 ```
 - **--consul-addr**: Specifies the address of the Consul server.
 - **--poll-interval**: --consul-addr: Specifies the address of the Consul server.
-- **--start-index**: Sets the initial index from which to begin monitoring for changes.
+- **--start-index**: Sets the initial index from which to begin monitoring for changes. If not explicitly set, it defaults to 0.
 - **--mode**: Specifies the monitoring mode. Use "service" for service registration/deregistration monitoring, and "instance" for monitoring specific service instances and their health.
 - **--service-name**: Specifies the name of the service to monitor instances for. Required when --mode is set to "instance".
 
