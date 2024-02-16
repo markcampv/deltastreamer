@@ -14,7 +14,7 @@ var monitorCmd = &cobra.Command{
 	Use:   "monitor",
 	Short: "Monitor changes in service states within Consul",
 	Long:  "Monitors and streams deltas of service changes in the Consul cluster, focusing on delivering only the changes rather than the entire payload.",
-	Run:   monitorServicesRegistrations,
+	Run:   monitorCommandHandler,
 }
 
 var (
