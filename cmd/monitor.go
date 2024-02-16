@@ -175,4 +175,36 @@ func logDeltas(prev, current map[string]struct{}) {
 	}
 }
 
+func logInstanceDeltas(prev, curr []*api.ServiceEntry) {
+	prevMap := make(map[string]*api.ServiceEntry)
+	currMap := make(map[string]*api.ServiceEntry)
+
+	//Populate the previous instances map
+	for _, instance := range prev {
+		prevMap[instance.Service.ID] = instance
+	}
+
+	// Populate the current instances map and check for additions or health changes
+	for _, instance := range curr {
+	     currMap[instance.Service.ID] = instance
+	     if _, exists := prevMap[instance.Service.ID]; !exists {
+			 fmt.Printf("Added instance %s\n", instance.Service.ID)
+		 } else {
+			 //Check if health status has changed
+			 if !healthStatusEquals(prevMap[instance.Service.ID], instance) {
+				 fmt.Printf(("Health status changed for instance: %s\n", instance.Service.ID)
+			 }
+		 }
+	}
+
+	// Check for removed instances
+	for _, instance := range prev {
+		if _, exists := currMap[instance.Service.ID]; !exists {
+			fmt.Printf("Removed instance: %s\n", instance.Service.ID)
+		}
+	}
+}
+
+
+
 
