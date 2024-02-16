@@ -106,8 +106,10 @@ func monitorServiceInstances (cmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to create Consul client: %v", err)
 	}
 
-	previousServices := make(map[string]struct{}) // track known services
+	
 	lastIndex := startIndex // Use the startIndex specified by the flag
+	var previousInstances []*api.ServiceEntry
+
 
 	fmt.Println("Monitoring instances of service:", serviceName, "at", consulAddr)
 	ticker :=  time.NewTicker(time.Duration(pollInterval) * time.Second)
@@ -122,8 +124,9 @@ func monitorServiceInstances (cmd *cobra.Command, args []string) {
 		}
 
 		if newIndex != lastIndex {
-			logInstanceDeltas(previousInstances, instances)
-			previousInstances = instances // Update previous state for next comparison
+			logInstanceDeltas(previousInstances, instances) // Use 'instances' directly as fetched
+			previousInstances = make([]*api.ServiceEntry, len(instances)) //Reinitialize previousInstances to match instances length
+			copy(previousInstances, instances) //Deep copy instances to previousInstances
 		}
 
 		// count health instances
