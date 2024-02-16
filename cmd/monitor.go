@@ -14,13 +14,15 @@ var monitorCmd = &cobra.Command{
 	Use:   "monitor",
 	Short: "Monitor changes in service states within Consul",
 	Long:  "Monitors and streams deltas of service changes in the Consul cluster, focusing on delivering only the changes rather than the entire payload.",
-	Run:   monitorServices,
+	Run:   monitorServicesRegistrations,
 }
 
 var (
 	consulAddr   string
 	pollInterval int
 	startIndex   uint64
+	serviceName  string
+	mode         string
 )
 
 func init() {
@@ -30,9 +32,27 @@ func init() {
 	monitorCmd.Flags().StringVarP(&consulAddr, "consul-addr", "a", "http://localhost:8500", "Address of the Consul server")
 	monitorCmd.Flags().IntVarP(&pollInterval, "poll-interval", "p", 10, "Polling interval in seconds")
 	monitorCmd.Flags().Uint64Var(&startIndex, "start-index", 0, "Initial index to start watching for changes")
+	monitorCmd.Flags().StringVar(&serviceName, "service-name", "", "The name of the service to monitor")
+	monitorCmd.Flags().StringVar(&mode, "mode", "service", "Monitoring mode: 'service' for service registration/deregistration, 'instance' for service instances and health")
 }
 
-func monitorServices(cmd *cobra.Command, args []string) {
+func monitorCommandHandler(cmd *cobra.Command, args []string) {
+	client, err := api.NewClient((&api.Config{Address: consulAddr})
+	if err != nil {
+		log.Fatalf("Failed to create Consul client: %v", err)
+	}
+
+	switch mode {
+	case "service":
+		monitorServicesRegistrations(client)
+	case "instance":
+		monitorServiceInstances(client)
+	default:
+		log.Fatalf("Invalid mode specified: %s. Valid modes are 'service' or 'instance'.")
+	}
+}
+
+func monitorServicesRegistrations(cmd *cobra.Command, args []string) {
 	client, err := api.NewClient((&api.Config{Address: consulAddr}))
 	if err != nil {
 		log.Fatalf("Failed to create Consul client: &v", err)
@@ -80,6 +100,65 @@ func fetchServices(client *api.Client, lastIndex uint64) (map[string]struct{}, u
 	return serviceMap, meta.LastIndex, nil
 }
 
+func monitorServiceInstances (cmd *cobra.Command, args []string) {
+	client, err := api.NewClient((&api.Config{Address: consulAddr}))
+	if err != nil {
+		log.Fatalf("Failed to create Consul client: %v", err)
+	}
+
+	previousServices := make(map[string]struct{}) // track known services
+	lastIndex := startIndex // Use the startIndex specified by the flag
+
+	fmt.Println("Monitoring instances of service:", serviceName, "at", consulAddr)
+	ticker :=  time.NewTicker(time.Duration(pollInterval) * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		fmt.Println("Fetching current state of service instances...")
+		instances, newIndex, err := fetchServiceInstances(client, serviceName, lastIndex)
+		if err != nil {
+			log.Printf("Error fetching service instances: %v\n", err)
+			continue
+		}
+
+		if newIndex != lastIndex {
+			logInstanceDeltas(previousInstances, instances)
+			previousInstances = instances // Update previous state for next comparison
+		}
+
+		// count health instances
+		totalInstances := len(instances)
+		healthyInstances := 0
+		for _, instance := range instances {
+			for _, check := range instance.Checks {
+				if check.Status == "passing" {
+					healthyInstances++
+					break // This accounts for on health check per instance for now
+				}
+			}
+		}
+
+		fmt.Printf("Out of %d instances, %d are healthy.\n", totalInstances, healthyInstances)
+
+		lastIndex = newIndex
+		fmt.Printf("Last index update to: %d\n", lastIndex)
+	}
+}
+
+func fetchServiceInstances(client *api.Client, serviceName string, lastIndex uint64) ([]*api.ServiceEntry, uint64, error) {
+	queryOpts := &api.QueryOptions{
+		WaitIndex: lastIndex,       // Use the last known index to wait for changes
+		WaitTime:  5 * time.Minute, // Max wait time; may make a flag out of this
+	}
+
+	instances, meta, err := client.Health().Service(serviceName, "", true, queryOpts)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return instances, meta.LastIndex, nil
+}
+
 func logDeltas(prev, current map[string]struct{}) {
 	// Log added services
 	for service := range current {
@@ -95,3 +174,5 @@ func logDeltas(prev, current map[string]struct{}) {
 		}
 	}
 }
+
+
