@@ -133,8 +133,12 @@ func monitorServiceInstances(client *api.Client) {
 		for _, instance := range instances {
 			isHealthy := false
 			for _, check := range instance.Checks {
-				fmt.Printf("CheckID: %s, Status: %s\n", check.CheckID, check.Status) // Debugging line
-				if check.Status == "passing" && check.ServiceID == serviceName {
+				// Skip the serfHealth check
+				if check.CheckID == "serfHealth" {
+					continue
+				}
+				//fmt.Printf("CheckID: %s, Status: %s\n", check.CheckID, check.Status) // Debugging line
+				if check.Status == "passing" {
 					isHealthy = true
 					break // This accounts for on health check per instance for now
 				}
